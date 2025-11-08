@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mlc-ai/web-llm": "^0.2.79",
     "@react-google-maps/api": "2.20.7",
     "fuse.js": "^7.1.0",
     "leaflet": "^1.9.4",
@@ -19,6 +20,7 @@
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.30.1",
+    "run-anywhere-server": "^1.0.0",
     "zustand": "5.0.8"
   },
   "devDependencies": {
