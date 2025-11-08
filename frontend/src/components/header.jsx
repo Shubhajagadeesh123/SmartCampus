@@ -1,12 +1,13 @@
 import { Link } from "react-router-dom";
-export default function Header(){
+
+export default function Header() {
   return (
-    <header className="bg-white shadow p-3">
-      <div className="container mx-auto flex justify-between items-center">
-        <h1 className="font-bold">TechTitans — Smart Campus</h1>
-        <nav className="space-x-4">
-          <Link to="/" className="text-sm">Home</Link>
-          <Link to="/map" className="text-sm font-medium">Map</Link>
+    <header className="app-header">
+      <div className="app-wrap">
+        <h1 className="brand">JSSATEB — Smart Campus</h1>
+        <nav className="nav">
+          <Link to="/">Home</Link>
+          <Link to="/navigate">Navigate</Link>
         </nav>
       </div>
     </header>
