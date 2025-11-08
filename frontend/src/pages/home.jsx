@@ -1,55 +1,122 @@
-import { useState, useRef } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Fuse from "fuse.js";
+
+/** A compact list of Bengaluru engineering colleges (extend anytime) */
+const COLLEGES_BLR = [
+  { name: "R V College of Engineering, Bengaluru", query: "RVCE Bengaluru" },
+  { name: "BMS College of Engineering, Bengaluru", query: "BMSCE Bengaluru" },
+  { name: "PES University (Ring Road), Bengaluru", query: "PES University RR" },
+  { name: "MS Ramaiah Institute of Technology, Bengaluru", query: "MSRIT Bengaluru" },
+  { name: "Dayananda Sagar College of Engineering", query: "DSCE Bengaluru" },
+  { name: "Bangalore Institute of Technology", query: "BIT Bengaluru" },
+  { name: "JSS Academy of Technical Education, Bengaluru", query: "JSSATEB" },
+  { name: "Sir M. Visvesvaraya Institute of Technology", query: "MVIT Bengaluru" },
+  { name: "BNMIT Bengaluru", query: "BNMIT Bengaluru" },
+  { name: "New Horizon College of Engineering", query: "NHCE Bengaluru" },
+];
 
 export default function Home() {
-  const [q, setQ] = useState("");
   const navigate = useNavigate();
-  const recognizingRef = useRef(false);
+  const [q, setQ] = useState("");
+  const [selectedIdx, setSelectedIdx] = useState(-1);
 
-  function go() {
-    const dest = q.trim();
-    if (!dest) return;
-    navigate(`/navigate?dest=${encodeURIComponent(dest)}`);
-  }
+  const fuse = useMemo(
+    () => new Fuse(COLLEGES_BLR, { keys: ["name", "query"], threshold: 0.3 }),
+    []
+  );
 
-  function startVoice() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      alert("Voice input not supported on this browser.");
-      return;
-    }
-    const recog = new SR();
-    recog.lang = "en-IN";
-    recognizingRef.current = true;
-    recog.onresult = (e) => {
-      const text = e.results?.[0]?.[0]?.transcript ?? "";
-      if (text) setQ(text);
-    };
-    recog.onend = () => {
-      recognizingRef.current = false;
-    };
-    recog.start();
-  }
+  const results = q ? fuse.search(q).map((r) => r.item) : COLLEGES_BLR;
+
+  const selected = selectedIdx >= 0 ? results[selectedIdx] : null;
 
   return (
-    <div className="page container">
-      <div className="card hero">
-        <h2 className="title">Smart Campus Navigation</h2>
-        <p className="sub">Type or speak your destination inside JSSATEB.</p>
+    <div className="container page" style={{ maxWidth: 980 }}>
+      <h1 className="text-3xl md:text-4xl font-extrabold" style={{ marginBottom: 8 }}>
+        Smart Campus Navigation
+      </h1>
 
-        <div className="search-row">
+      {/* hero image card */}
+      <div
+        className="card"
+        style={{
+          padding: 0,
+          overflow: "hidden",
+          borderRadius: 16,
+          border: "1px solid var(--border)",
+          marginBottom: 16,
+        }}
+      >
+        <img
+          src="/images/map-hero.jpg"
+          alt="Navigation hero"
+          style={{ width: "100%", height: 260, objectFit: "cover" }}
+        />
+        <div style={{ padding: 16 }}>
+          <div style={{ fontWeight: 700, marginBottom: 6 }}>
+            Find a college in Bengaluru and start navigating
+          </div>
+          <div className="hint">
+            Pick your college below. Click <b>Open Navigator</b> to go to the campus routing page.
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="field">
+          <label className="label">Search college</label>
           <input
             className="search-input"
+            placeholder="Type college name…"
             value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="e.g., CSE Block, Library, Cafeteria…"
-            onKeyDown={(e) => e.key === "Enter" && go()}
+            onChange={(e) => {
+              setQ(e.target.value);
+              setSelectedIdx(-1);
+            }}
           />
-          <button className="btn primary" onClick={go}>Search</button>
-          <button className="btn ghost" onClick={startVoice}>🎤</button>
         </div>
 
-        <p className="hint">Tip: You can also select source & destination on the next page.</p>
+        <div className="field">
+          <label className="label">Select from list</label>
+          <select
+            className="select"
+            value={selectedIdx}
+            onChange={(e) => setSelectedIdx(Number(e.target.value))}
+          >
+            <option value={-1} disabled>
+              Choose a college…
+            </option>
+            {results.map((c, i) => (
+              <option key={c.name} value={i}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="search-row" style={{ justifyContent: "flex-start" }}>
+          <button
+            className="btn primary"
+            onClick={() => {
+              if (!selected) {
+                alert("Please select a college before opening the navigator.");
+                return;
+              }
+              // Persist the user’s selection for the Navigate page
+              localStorage.setItem(
+                "selectedCollege",
+                JSON.stringify({ name: selected.name, query: selected.query })
+              );
+              navigate("/navigate");
+            }}
+          >
+            Open Navigator
+          </button>
+
+          <div className="hint" style={{ marginLeft: 12 }}>
+            Choose a college, then click the button to open the navigation page.
+          </div>
+        </div>
       </div>
     </div>
   );
